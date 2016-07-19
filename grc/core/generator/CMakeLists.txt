@@ -25,8 +25,8 @@ GR_PYTHON_INSTALL(
     COMPONENT "grc"
 )
 
-install(FILES
-    flow_graph.tmpl
-    DESTINATION ${GR_PYTHON_DIR}/gnuradio/grc/core/generator
+install(DIRECTORY
+    templates/
+    DESTINATION ${GR_PYTHON_DIR}/gnuradio/grc/core/generator/templates
     COMPONENT "grc"
 )
