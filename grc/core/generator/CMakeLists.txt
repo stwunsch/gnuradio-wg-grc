@@ -26,7 +26,8 @@ GR_PYTHON_INSTALL(
 )
 
 install(FILES
-    flow_graph.tmpl
+    FlowGraph.tmpl
+    FlowGraphBase.tmpl
     DESTINATION ${GR_PYTHON_DIR}/gnuradio/grc/core/generator
     COMPONENT "grc"
 )

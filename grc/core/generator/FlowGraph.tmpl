@@ -1,0 +1,303 @@
+########################################################
+##Mako template - gnuradio_python
+##
+##@param imports the import statements
+##@param flow_graph the flow_graph
+##@param variables the variable blocks
+##@param parameters the parameter blocks
+##@param blocks the signal blocks
+##@param connections the connections
+##@param msgs the msg type connections
+##@param generate_options the type of flow graph
+##@param callbacks variable id map to callback strings
+########################################################
+
+## All template parts which are dependend on the generate options are set in this
+## file. The static parts are inherited.
+
+<%inherit file="FlowGraphBase.tmpl"/>
+
+<%block name="shebang">\
+## Option: Deactivate for hier blocks
+%if not generate_options.startswith('hb'):
+#!/usr/bin/env python2
+%endif
+</%block>
+
+<%block name="xinit">\
+## Option: Only for wx and qt gui
+%if generate_options in ('wx_gui', 'qt_gui'):
+
+if __name__ == '__main__':
+    import ctypes
+    import sys
+    if sys.platform.startswith('linux'):
+        try:
+            x11 = ctypes.cdll.LoadLibrary('libX11.so')
+            x11.XInitThreads()
+        except:
+            print "Warning: failed to XInitThreads()"
+%endif
+</%block>
+
+<%block name="class_init">
+<%
+class_name = flow_graph.get_option('id')
+param_str = ', '.join(['self'] + ['%s=%s'%(param.get_id(), param.get_make()) for param in parameters])
+%>\
+## Option: wx gui
+%if generate_options == 'wx_gui':
+<%! import gtk %>\
+<% icon = gtk.IconTheme().lookup_icon('gnuradio-grc', 32, 0) %>\
+class ${class_name}(grc_wxgui.top_block_gui):
+
+    def __init__(${param_str}):
+        grc_wxgui.top_block_gui.__init__(self, title="${title}")
+%if icon:
+        _icon_path = "${icon}.get_filename()"
+        self.SetIcon(wx.Icon(_icon_path, wx.BITMAP_TYPE_ANY))
+%endif
+## Option: qt gui
+%elif generate_options == 'qt_gui':
+class ${class_name}(gr.top_block, Qt.QWidget):
+
+    def __init__(${param_str}):
+        gr.top_block.__init__(self, "${title}")
+        Qt.QWidget.__init__(self)
+        self.setWindowTitle("${title}")
+        try:
+            self.setWindowIcon(Qt.QIcon.fromTheme('gnuradio-grc'))
+        except:
+            pass
+        self.top_scroll_layout = Qt.QVBoxLayout()
+        self.setLayout(self.top_scroll_layout)
+        self.top_scroll = Qt.QScrollArea()
+        self.top_scroll.setFrameStyle(Qt.QFrame.NoFrame)
+        self.top_scroll_layout.addWidget(self.top_scroll)
+        self.top_scroll.setWidgetResizable(True)
+        self.top_widget = Qt.QWidget()
+        self.top_scroll.setWidget(self.top_widget)
+        self.top_layout = Qt.QVBoxLayout(self.top_widget)
+        self.top_grid_layout = Qt.QGridLayout()
+        self.top_layout.addLayout(self.top_grid_layout)
+
+        self.settings = Qt.QSettings("GNU Radio", "${class_name}")
+        self.restoreGeometry(self.settings.value("geometry").toByteArray())
+## Option: no gui
+%elif generate_options == 'no_gui':
+class ${class_name}(gr.top_block):
+
+    def __init__(${param_str}):
+        gr.top_block.__init__(self, "${title}")
+## Option: hier block
+%elif generate_options.startswith('hb'):
+<%
+in_sigs = flow_graph.get_hier_block_stream_io('in')
+out_sigs = flow_graph.get_hier_block_stream_io('out')
+%>\
+%if generate_options == 'hb_qt_gui':
+class ${class_name}(gr.hier_block2, Qt.QWidget):
+%else:
+class ${class_name}(gr.hier_block2):
+%endif
+<%def name="make_io_sig(io_sigs)">\
+<% size_strs = ['%s*%s'%(io_sig['size'], io_sig['vlen']) for io_sig in io_sigs] %>\
+    %if len(io_sigs) == 0:
+gr.io_signature(0, 0, 0)\
+    %elif len(io_sigs) == 1:
+gr.io_signature(1, 1, ${size_strs[0]})\
+    %else:
+gr.io_signaturev(${len(io_sigs)}, ${len(io_sigs)}, [${', '.join(size_strs)}])\
+    %endif
+</%def>\
+
+    def __init__(${param_str}):
+        gr.hier_block2.__init__(
+            self, "${title}",
+            ${make_io_sig(in_sigs)},
+            ${make_io_sig(out_sigs)},
+        )
+    %for pad in flow_graph.get_hier_block_message_io('in'):
+        self.message_port_register_hier_in("${pad}['label']")
+    %endfor
+    %for pad in flow_graph.get_hier_block_message_io('out'):
+        self.message_port_register_hier_out("${pad}['label']")
+    %endfor
+    %if generate_options == 'hb_qt_gui':
+
+        Qt.QWidget.__init__(self)
+        self.top_layout = Qt.QVBoxLayout()
+        self.top_grid_layout = Qt.QGridLayout()
+        self.top_layout.addLayout(self.top_grid_layout)
+        self.setLayout(self.top_layout)
+    %endif
+%endif
+</%block>
+
+<%block name="close_method">\
+## QT sink close method reimplementation
+## Option: qt gui
+<%
+class_name = flow_graph.get_option('id')
+%>\
+%if generate_options == 'qt_gui':
+
+    def closeEvent(self, event):
+        self.settings = Qt.QSettings("GNU Radio", "${class_name}")
+        self.settings.setValue("geometry", self.saveGeometry())
+        event.accept()
+    %if flow_graph.get_option('qt_qss_theme'):
+
+    def setStyleSheetFromFile(self, filename):
+        try:
+            if not os.path.exists(filename):
+                filename = os.path.join(
+                    gr.prefix(), "share", "gnuradio", "themes", filename)
+            with open(filename) as ss:
+                self.setStyleSheet(ss.read())
+        except Exception as e:
+            print >> sys.stderr, e
+    %endif
+%endif
+</%block>
+
+<%block name="main">
+## Option: Deactivate main for hier blocks
+## Set argument_parser function
+%if not generate_options.startswith('hb'):
+<%
+class_name = flow_graph.get_option('id')
+%>\
+<%def name="make_default(type, param)">
+    %if type == 'eng_float':
+eng_notation.num_to_str(${param}.get_make())
+    %else:
+${param}.get_make()
+    %endif
+</%def>\
+<%def name="make_short_id(param)">
+    <% short_id = param.get_param('short_id').get_evaluated() %>
+    %if short_id:
+        <% short_id = '-' + short_id %>
+    %endif
+${short_id}
+</%def>\
+<% params_eq_list = list() %>\
+%if parameters:
+
+def argument_parser():
+<% arg_parser_args = '' %>\
+    %if flow_graph.get_option('description'):
+<% arg_parser_args = 'description=description' %>\
+    description = repr(flow_graph.get_option('description'))
+    %endif
+    parser = ArgumentParser(${arg_parser_args})
+    %for param in parameters:
+<% type = param.get_param('type').get_value() %>\
+        %if type:
+## FIXME: test me: the next line should equal this: #silent $params_eq_list.append('%s=options.%s'%($param.get_id(), $param.get_id()))
+<% params_eq_list.append('%s=options.%s'%(param.get_id(), param.get_id())) %>\
+    parser.add_argument(
+        %if make_short_id(param):
+        "${make_short_id(param)}", \
+        %endif
+        "--${param.get_id().replace('_', '-')}", dest="${param.get_id()}", type=${type}, default=${make_default(type, param)},
+        help="Set ${param.get_param('label').get_evaluated() or param.get_id()} [default=%(default)r]")
+        %endif
+    %endfor
+    return parser
+%endif
+
+
+## Set main function
+def main(top_block_cls=${class_name}, options=None):
+    %if parameters:
+    if options is None:
+        options = argument_parser().parse_args()
+    %endif
+    %if flow_graph.get_option('realtime_scheduling'):
+    if gr.enable_realtime_scheduling() != gr.RT_OK:
+        print "Error: failed to enable real-time scheduling."
+    %endif
+
+## Option: wx gui
+    %if generate_options == 'wx_gui':
+    tb = top_block_cls(${', '.join(params_eq_list)})
+        %if flow_graph.get_option('max_nouts'):
+    tb.Run(${flow_graph.get_option('run')}, ${flow_graph.get_option('max_nouts')})
+        %else:
+    tb.Start(${flow_graph.get_option('run')})
+        %for m in monitors:
+    (tb.${m.get_id()}).start()
+        %endfor
+    tb.Wait()
+        %endif
+## Option: qt gui
+    %elif generate_options == 'qt_gui':
+    from distutils.version import StrictVersion
+    if StrictVersion(Qt.qVersion()) >= StrictVersion("4.5.0"):
+        style = gr.prefs().get_string('qtgui', 'style', 'raster')
+        Qt.QApplication.setGraphicsSystem(style)
+    qapp = Qt.QApplication(sys.argv)
+
+    tb = top_block_cls(${', '.join(params_eq_list)})
+    %if flow_graph.get_option('run'):
+        %if flow_graph.get_option('max_nouts'):
+    tb.start(${flow_graph.get_option('max_nouts')})
+        %else:
+    tb.start()
+        %endif
+    %endif
+    %if flow_graph.get_option('qt_qss_theme'):
+    tb.setStyleSheetFromFile($repr{flow_graph.get_option('qt_qss_theme')})
+    %endif
+    tb.show()
+
+    def quitting():
+        tb.stop()
+        tb.wait()
+    qapp.connect(qapp, Qt.SIGNAL("aboutToQuit()"), quitting)
+        %for m in monitors:
+    if 'en' in ${m.params}:
+        if ${m.params['en'].get_value()}:
+            (tb.${m.get_id()}).start()
+    else:
+        sys.stderr.write("Monitor '{0}' does not have an enable ('en') parameter.".format("tb.${m.get_id()}"))
+        %endfor
+    qapp.exec_()
+## Option: no gui
+    %elif generate_options == 'no_gui':
+    tb = top_block_cls(${', '.join(params_eq_list)})
+        <% run_options = flow_graph.get_option('run_options') %>\
+        %if run_options == 'prompt':
+            %if flow_graph.get_option('max_nouts'):
+    tb.start(${flow_graph.get_option('max_nouts')})
+            %else:
+    tb.start()
+            %endif
+        %for m in monitors:
+    (tb.${m.get_id()}).start()
+        %endfor
+    try:
+        raw_input('Press Enter to quit: ')
+    except EOFError:
+        pass
+    tb.stop()
+        %elif run_options == 'run':
+            %if flow_graph.get_option('max_nouts'):
+    tb.start(${flow_graph.get_option('max_nouts')})
+            %else:
+    tb.start()
+            %endif
+        %endif
+        %for m in monitors:
+    (tb.${m.get_id()}).start()
+        %endfor
+    tb.wait()
+    %endif
+
+
+if __name__ == '__main__':
+    main()
+%endif
+</%block>

@@ -24,7 +24,9 @@ import tempfile
 import operator
 import collections
 
-from Cheetah.Template import Template
+from mako.template import Template
+from mako.lookup import TemplateLookup
+from mako import exceptions
 import six
 
 from .FlowGraphProxy import FlowGraphProxy
@@ -36,7 +38,7 @@ from ..Constants import (
 from ..utils import expr_utils
 
 DATA_DIR = os.path.dirname(__file__)
-FLOW_GRAPH_TEMPLATE = os.path.join(DATA_DIR, 'flow_graph.tmpl')
+FLOW_GRAPH_TEMPLATE = os.path.join(DATA_DIR, 'FlowGraph.tmpl')
 
 
 class Generator(object):
@@ -250,7 +252,13 @@ class TopBlockGenerator(object):
             'callbacks': callbacks,
         }
         # Build the template
-        t = Template(open(FLOW_GRAPH_TEMPLATE, 'r').read(), namespace)
+        # FIXME: the directories for the lookup are a kind of problem...
+        tl = TemplateLookup(directories=['/home/stefan/src/pybombs/lib/python2.7/site-packages/gnuradio/grc/core/generator'])
+        t = None
+        try:
+            t = Template(open(FLOW_GRAPH_TEMPLATE, 'r').read(), lookup=tl).render(**namespace)
+        except:
+            print(exceptions.text_error_template().render())
         output.append((self.file_path, str(t)))
         return output
 
