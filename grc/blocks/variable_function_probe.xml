@@ -9,22 +9,22 @@
 	<key>variable_function_probe</key>
 	<import>import time</import>
 	<import>import threading</import>
-	<var_make>self.$(id) = $(id) = $value</var_make>
+    <var_make>self.${id} = ${id} = ${value}</var_make>
 	<make>
-def _$(id)_probe():
+def _${id}_probe():
     while True:
-        #set $obj = 'self' + ('.' + $block_id() if $block_id() else '')
-        val = $(obj).$(function_name())($(function_args()))
+        <% obj = 'self' + ('.' + block_id() if block_id() else '') %>
+        val = ${obj}.${function_name()}(${function_args()})
         try:
-            self.set_$(id)(val)
+            self.set_${id}(val)
         except AttributeError:
             pass
-        time.sleep(1.0 / ($poll_rate))
-_$(id)_thread = threading.Thread(target=_$(id)_probe)
-_$(id)_thread.daemon = True
-_$(id)_thread.start()
+        time.sleep(1.0 / (${poll_rate}))
+_${id}_thread = threading.Thread(target=_${id}_probe)
+_${id}_thread.daemon = True
+_${id}_thread.start()
     </make>
-	<callback>self.set_$(id)($value)</callback>
+    <callback>self.set_${id}(${value})</callback>
 	<param>
 		<name>Block ID</name>
 		<key>block_id</key>
@@ -42,7 +42,13 @@ _$(id)_thread.start()
 		<key>function_args</key>
 		<value></value>
 		<type>string</type>
-		<hide>#if $function_args() then 'none' else 'part'#</hide>
+        <hide>
+            %if function_args():
+                none
+            %else:
+                part
+            %endif
+        </hide>
 	</param>
 	<param>
 		<name>Poll Rate (Hz)</name>

@@ -3,11 +3,12 @@
 ###################################################
 ##Import python modules into the namespace
 ###################################################
+## FIXME: ${import} is not possible in mako because 'import' is protected python keyword
  -->
 <block>
 	<name>Import</name>
 	<key>import</key>
-	<import>$import</import>
+    <import>${import}</import>
 	<make></make>
 	<param>
 		<name>Import</name>

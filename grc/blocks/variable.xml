@@ -7,9 +7,9 @@
 <block>
 	<name>Variable</name>
 	<key>variable</key>
-	<var_make>self.$(id) = $(id) = $value</var_make>
+    <var_make>self.${id} = ${id} = ${value}</var_make>
 	<make></make>
-	<callback>self.set_$(id)($value)</callback>
+    <callback>self.set_${id}(${value})</callback>
 	<param>
 		<name>Value</name>
 		<key>value</key>

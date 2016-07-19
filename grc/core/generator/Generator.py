@@ -24,7 +24,7 @@ import tempfile
 import operator
 import collections
 
-from Cheetah.Template import Template
+from mako.template import Template
 import six
 
 from .FlowGraphProxy import FlowGraphProxy
@@ -250,7 +250,7 @@ class TopBlockGenerator(object):
             'callbacks': callbacks,
         }
         # Build the template
-        t = Template(open(FLOW_GRAPH_TEMPLATE, 'r').read(), namespace)
+        t = Template(open(FLOW_GRAPH_TEMPLATE, 'r').read()).render(**namespace)
         output.append((self.file_path, str(t)))
         return output
 
