@@ -88,13 +88,13 @@
 			<key>False</key>
 		</option>
 	</param>
-    <check>${vlen} &gt; 0</check>
-    <check>${num_streams} &gt; 0</check>
+	<check>$vlen &gt; 0</check>
+	<check>$num_streams &gt; 0</check>
 	<source>
 		<name>out</name>
-        <type>${type}</type>
-        <vlen>${vlen}</vlen>
-        <nports>${num_streams}</nports>
+		<type>$type</type>
+		<vlen>$vlen</vlen>
+		<nports>$num_streams</nports>
 	</source>
 	<doc>
 The outputs of this block will become the inputs to this flow graph when it is instantiated as a hierarchical block.

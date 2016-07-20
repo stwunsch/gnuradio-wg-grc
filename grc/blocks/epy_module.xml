@@ -2,7 +2,7 @@
 <block>
 	<name>Python Module</name>
 	<key>epy_module</key>
-    <import>import ${id}  # embedded python module</import>
+	<import>import $id  # embedded python module</import>
 	<make></make>
 	<param>
 		<name>Code</name>

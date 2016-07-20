@@ -7,7 +7,7 @@
 <block>
 	<name>Bus Sink</name>
 	<key>bus_sink</key>
-    <make>${yesno}.yesno</make>
+	<make>$yesno.yesno</make>
 
 	<param>
 		<name>On/Off</name>

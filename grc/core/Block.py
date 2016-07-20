@@ -26,7 +26,7 @@ import ast
 import six
 from six.moves import map, range
 
-from mako.template import Template
+from Cheetah.Template import Template
 
 from . import utils
 
@@ -558,7 +558,7 @@ class Block(Element):
 
     def resolve_dependencies(self, tmpl):
         """
-        Resolve a paramater dependency with mako templates.
+        Resolve a paramater dependency with cheetah templates.
 
         Args:
             tmpl: the string with dependencies
@@ -567,12 +567,12 @@ class Block(Element):
             the resolved value
         """
         tmpl = str(tmpl)
-        if '$' not in tmpl and '%' not in tmpl:
+        if '$' not in tmpl:
             return tmpl
         # TODO: cache that
         n = {key: param.template_arg for key, param in six.iteritems(self.params)}
         try:
-            return str(Template(tmpl).render(**n))
+            return str(Template(tmpl, n))
         except Exception as err:
             return "Template error: {}\n    {}".format(tmpl, err)
 

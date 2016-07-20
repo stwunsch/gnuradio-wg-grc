@@ -7,7 +7,7 @@
 <block>
 	<name>Bus Source</name>
 	<key>bus_source</key>
-    <make>${yesno}.yesno</make>
+	<make>$yesno.yesno</make>
 
 	<param>
 		<name>On/Off</name>
