@@ -253,7 +253,8 @@ class TopBlockGenerator(object):
         }
         # Build the template
         # FIXME: the directories for the lookup are a kind of problem...
-        tl = TemplateLookup(directories=['/home/stefan/src/pybombs/lib/python2.7/site-packages/gnuradio/grc/core/generator'])
+        pythonpath = os.environ['PYTHONPATH'].split(os.pathsep)
+        tl = TemplateLookup(directories=[s+'/gnuradio/grc/core/generator/' for s in pythonpath])
         t = None
         try:
             t = Template(open(FLOW_GRAPH_TEMPLATE, 'r').read(), lookup=tl).render(**namespace)
