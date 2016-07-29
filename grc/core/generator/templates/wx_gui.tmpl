@@ -39,16 +39,16 @@ if __name__ == '__main__':
 class_name = flow_graph.get_option('id')
 param_str = ', '.join(['self'] + ['{}={}'.format(param.get_id(), param.get_make()) for param in parameters])
 %>\
-<%! import gtk %>\
-<% icon = gtk.IconTheme().lookup_icon('gnuradio-grc', 32, 0) %>\
+##<%! import gtk %>
+##<% icon = gtk.IconTheme().lookup_icon('gnuradio-grc', 32, 0) %>
 class ${class_name}(grc_wxgui.top_block_gui):
 
     def __init__(${param_str}):
         grc_wxgui.top_block_gui.__init__(self, title="${title}")
-%if icon:
-        _icon_path = "${icon}.get_filename()"
-        self.SetIcon(wx.Icon(_icon_path, wx.BITMAP_TYPE_ANY))
-%endif
+##%if icon:
+##        _icon_path = "${icon}.get_filename()"
+##        self.SetIcon(wx.Icon(_icon_path, wx.BITMAP_TYPE_ANY))
+##%endif
 </%block>
 
 <%block name="main">
