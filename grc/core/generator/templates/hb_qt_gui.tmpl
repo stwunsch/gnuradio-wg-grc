@@ -19,14 +19,10 @@
 
 <%block name="class_init">
 <%
-class_name = flow_graph.get_option('id')
-param_str = ', '.join(['self'] + ['{}={}'.format(param.get_id(), param.get_make()) for param in parameters])
-%>\
-<%
 in_sigs = flow_graph.get_hier_block_stream_io('in')
 out_sigs = flow_graph.get_hier_block_stream_io('out')
 %>\
-class ${class_name}(gr.hier_block2, Qt.QWidget):
+class ${self.class_name}(gr.hier_block2, Qt.QWidget):
 <%def name="make_io_sig(io_sigs)">\
 <% size_strs = ['{}*{}'.format(io_sig['size'], io_sig['vlen']) for io_sig in io_sigs] %>\
     %if len(io_sigs) == 0:
@@ -38,7 +34,7 @@ gr.io_signaturev(${len(io_sigs)}, ${len(io_sigs)}, [${', '.join(size_strs)}])\
     %endif
 </%def>\
 
-    def __init__(${param_str}):
+    def __init__(${self.param_str}):
         gr.hier_block2.__init__(
             self, "${title}",
             ${make_io_sig(in_sigs)},

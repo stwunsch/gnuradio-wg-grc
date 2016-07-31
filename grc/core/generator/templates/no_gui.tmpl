@@ -22,21 +22,14 @@
 </%block>
 
 <%block name="class_init">
-<%
-class_name = flow_graph.get_option('id')
-param_str = ', '.join(['self'] + ['{}={}'.format(param.get_id(), param.get_make()) for param in parameters])
-%>\
-class ${class_name}(gr.top_block):
+class ${self.class_name}(gr.top_block):
 
-    def __init__(${param_str}):
+    def __init__(${self.param_str}):
         gr.top_block.__init__(self, "${title}")
 </%block>
 
-<%block name="main">
+<%block name="argument_parser">
 ## Set argument_parser function
-<%
-class_name = flow_graph.get_option('id')
-%>\
 <%def name="make_default(type, param)">
     %if type == 'eng_float':
 eng_notation.num_to_str(${param}.get_make())
@@ -51,7 +44,7 @@ ${param}.get_make()
     %endif
 ${short_id}
 </%def>\
-<% params_eq_list = list() %>\
+<% self.params_eq_list = list() %>\
 %if parameters:
 
 def argument_parser():
@@ -65,7 +58,7 @@ def argument_parser():
 <% type = param.get_param('type').get_value() %>\
         %if type:
 ## FIXME: test me: the next line should equal this: #silent $params_eq_list.append('%s=options.%s'%($param.get_id(), $param.get_id()))
-<% params_eq_list.append('{}=options.{}'.format(param.get_id(), param.get_id())) %>\
+<% self.params_eq_list.append('{}=options.{}'.format(param.get_id(), param.get_id())) %>\
     parser.add_argument(
         %if make_short_id(param):
         "${make_short_id(param)}", \
@@ -76,10 +69,11 @@ def argument_parser():
     %endfor
     return parser
 %endif
+</%block>
 
-
+<%block name="main">
 ## Set main function
-def main(top_block_cls=${class_name}, options=None):
+def main(top_block_cls=${self.class_name}, options=None):
     %if parameters:
     if options is None:
         options = argument_parser().parse_args()
@@ -89,8 +83,8 @@ def main(top_block_cls=${class_name}, options=None):
         print "Error: failed to enable real-time scheduling."
     %endif
 
-    tb = top_block_cls(${', '.join(params_eq_list)})
-        <% run_options = flow_graph.get_option('run_options') %>\
+    tb = top_block_cls(${', '.join(self.params_eq_list)})
+<% run_options = flow_graph.get_option('run_options') %>\
         %if run_options == 'prompt':
             %if flow_graph.get_option('max_nouts'):
     tb.start(${flow_graph.get_option('max_nouts')})
