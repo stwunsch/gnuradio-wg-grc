@@ -232,7 +232,24 @@ class TopBlockGenerator(object):
         for var_id in var_ids:
             callbacks[var_id] = [callback for callback in callbacks_all if uses_var_id()]
 
-        # Load the namespace
+        # Get connection signatures from connection templates
+        data_dir = os.path.dirname(__file__)
+        template_dir = os.path.join(data_dir, 'templates/')
+        tmpl_lookup = TemplateLookup(directories=[template_dir])
+        signature_template = os.path.join(template_dir, 'connection_signatures.tmpl')
+        try:
+            tmpl_str = open(signature_template, 'r').read()
+        except:
+            Messages.send_warning("Reading template from file {} failed:".format(signature_template))
+        connection_signatures = []
+        for con in connections:
+            namespace = {
+                'flow_graph': fg,
+                'connection': con,
+            }
+            tmpl = Template(tmpl_str+str(connection_templates[con.source_port.domain, con.sink_port.domain])).render(**namespace)
+            connection_signatures.append(tmpl)
+        # Load the namespace for the flowgraph template
         namespace = {
             'title': title,
             'imports': imports,
@@ -242,15 +259,12 @@ class TopBlockGenerator(object):
             'monitors': monitors,
             'blocks': blocks,
             'connections': connections,
-            'connection_templates': connection_templates,
+            'connection_signatures': connection_signatures,
             'msgs': msgs,
             'generate_options': self._generate_options,
             'callbacks': callbacks,
         }
         # Build the template
-        data_dir = os.path.dirname(__file__)
-        template_dir = os.path.join(data_dir, 'templates/')
-        tmpl_lookup = TemplateLookup(directories=[template_dir])
         flowgraph_template = os.path.join(template_dir, str(self._generate_options)+'.tmpl')
         try:
             tmpl_read = Template(open(flowgraph_template, 'r').read(), lookup=tmpl_lookup)

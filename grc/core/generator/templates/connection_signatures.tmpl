@@ -1,0 +1,15 @@
+<%
+    def make_port_sig(port):
+        if port.parent.key in ('pad_source', 'pad_sink'):
+            block = 'self'
+            key = flow_graph.get_pad_port_global_key(port)
+        else:
+            block = 'self.' + port.parent.get_id()
+            key = port.key
+        if not key.isdigit():
+            key = repr(key)
+        return "({}, {})".format(block, key)
+
+    source = connection.source_port
+    sink = connection.sink_port
+%>\

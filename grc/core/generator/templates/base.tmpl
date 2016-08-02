@@ -1,4 +1,16 @@
 ########################################################
+##Mako template - gnuradio_python
+##
+##@param imports the import statements
+##@param flow_graph the flow_graph
+##@param variables the variable blocks
+##@param parameters the parameter blocks
+##@param blocks the signal blocks
+##@param connections the connections
+##@param msgs the msg type connections
+##@param generate_options the type of flow graph
+##@param callbacks variable id map to callback strings
+########################################################
 ##Template Setup
 ########################################################
 ## Import python module needed for template generation
@@ -167,27 +179,8 @@ ${imp}
         # Connections
         ${DIVIDER}
 %endif
-%for con in connections:
-## FIXME: hacky hacky! can we do this better? Look at grc/blocks/gr_*_domain.xml
-<%
-    def make_port_sig(port):
-        if port.parent.key in ('pad_source', 'pad_sink'):
-            block = 'self'
-            key = flow_graph.get_pad_port_global_key(port)
-        else:
-            block = 'self.' + port.parent.get_id()
-            key = port.key
-        if not key.isdigit():
-            key = repr(key)
-        return "({}, {})".format(block, key)
-
-    source = con.source_port
-    sink = con.sink_port
-
-    source_str =  make_port_sig(source)
-    sink_str =  make_port_sig(sink)
-%>\
-${"        "+connection_templates[(source.domain, sink.domain)].format(source_str, sink_str)}
+%for con in connection_signatures:
+${"        "+con}
 %endfor
 ########################################################
 ## Close method (mainly for QT gui)
