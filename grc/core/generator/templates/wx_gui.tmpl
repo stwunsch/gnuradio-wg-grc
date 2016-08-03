@@ -21,16 +21,21 @@ if __name__ == '__main__':
 </%block>
 
 <%block name="class_init">
-##<%! import gtk %>
-##<% icon = gtk.IconTheme().lookup_icon('gnuradio-grc', 32, 0) %>
+<%! from gi.repository import Gtk %>\
+<%
+try:
+    icon = gtk.icontheme().load_icon('gnuradio-grc', 256, 0)
+except:
+    icon = ''
+%>\
 class ${self.class_name}(grc_wxgui.top_block_gui):
 
     def __init__(${self.param_str}):
         grc_wxgui.top_block_gui.__init__(self, title="${title}")
-##%if icon:
-##        _icon_path = "${icon}.get_filename()"
-##        self.SetIcon(wx.Icon(_icon_path, wx.BITMAP_TYPE_ANY))
-##%endif
+%if icon:
+        _icon_path = "${icon}.get_filename()"
+        self.SetIcon(wx.Icon(_icon_path, wx.BITMAP_TYPE_ANY))
+%endif
 </%block>
 
 <%block name="argument_parser">
